@@ -2,10 +2,8 @@ class Devise::InvitationsController < DeviseController
 
   prepend_before_filter :authenticate_inviter!, :only => [:new, :create]
   prepend_before_filter :has_invitations_left?, :only => [:create]
-  prepend_before_filter :require_no_authentication, :only => [:edit, :update, :d
-estroy]
-  prepend_before_filter :resource_from_invitation_token, :only => [:edit, :destr
-oy]
+  prepend_before_filter :require_no_authentication, :only => [:edit, :update, :destroy]
+  prepend_before_filter :resource_from_invitation_token, :only => [:edit, :destroy]
   helper_method :after_sign_in_path_for
 
   # GET /resource/invitation/new
@@ -20,8 +18,7 @@ oy]
 
     if resource.errors.empty?
       yield resource if block_given?
-      set_flash_message :notice, :send_instructions, :email => self.resource.ema
-il if self.resource.invitation_sent_at
+      set_flash_message :notice, :send_instructions, :email => self.resource.email if self.resource.invitation_sent_at
       respond_with resource, :location => after_invite_path_for(resource)
     else
       respond_with_navigational(resource) { render :new }
@@ -40,8 +37,7 @@ il if self.resource.invitation_sent_at
 
     if resource.errors.empty?
       yield resource if block_given?
-       flash_message = resource.active_for_authentication? ? :updated : :updated
-_not_active
+       flash_message = resource.active_for_authentication? ? :updated : :updated_not_active
 
  #params[:avatar]=session[:linkedin_signup_picture]
 
@@ -84,8 +80,7 @@ _not_active
   end
 
   def resource_from_invitation_token
-    unless params[:invitation_token] && self.resource = resource_class.find_by_i
-nvitation_token(params[:invitation_token], true)
+    unless params[:invitation_token] && self.resource = resource_class.find_by_invitation_token(params[:invitation_token], true)
       set_flash_message(:alert, :invitation_token_invalid)
       redirect_to after_sign_out_path_for(resource_name)
     end
